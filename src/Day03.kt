@@ -46,14 +46,84 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val numbers = mutableListOf<Number>()
+        val gears = mutableListOf<Gear>()
+        input.forEachIndexed { rowIndex, row ->
+            var numberStart = -1
+            var currentNumber = ""
+            row.forEachIndexed { index, char ->
+                when {
+                    char.isDigit() -> {
+                        currentNumber += char
+                        if (numberStart == -1) numberStart = index
+                    }
+
+                    else -> {
+                        if (char == '*') {
+                            gears.add(Gear(rowIndex, index))
+                        }
+                        if (currentNumber.isNotEmpty()) {
+                            numbers.add(
+                                    Number(
+                                            value = currentNumber.toInt(),
+                                            row = rowIndex,
+                                            startIndex = numberStart,
+                                            endIndex = index - 1,
+                                    )
+                            )
+                            currentNumber = ""
+                            numberStart = -1
+                        }
+                    }
+                }
+            }
+            if (currentNumber.isNotEmpty()) {
+                numbers.add(
+                        Number(
+                                value = currentNumber.toInt(),
+                                row = rowIndex,
+                                startIndex = numberStart,
+                                endIndex = row.lastIndex,
+                        )
+                )
+            }
+        }
+
+        val gearRatioPairs = mutableListOf<Pair<Int, Int>>()
+        gears.forEach { gear ->
+            val gearNumbers = numbers.filter { number ->
+                (number.row == gear.row && (number.endIndex == gear.column - 1 || number.startIndex == gear.column + 1)) ||
+                        (number.row in gear.row - 1..gear.row + 1 && gear.column in number.startIndex - 1..number.endIndex + 1)
+            }
+            if (gearNumbers.size == 2) {
+                gearRatioPairs.add(Pair(gearNumbers[0].value, gearNumbers[1].value))
+            }
+        }
+
+        return gearRatioPairs.sumOf {
+            it.first * it.second
+        }
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day03_test")
     check(part1(testInput) == 4361)
+    check(part2(testInput) == 467835)
+    part2(testInput)
 
     val input = readInput("Day03")
     part1(input).println()
-//    part2(input).println()
+    part2(input).println()
 }
+
+data class Number(
+        val value: Int,
+        val row: Int,
+        val startIndex: Int,
+        val endIndex: Int,
+)
+
+data class Gear(
+        val row: Int,
+        val column: Int,
+)
