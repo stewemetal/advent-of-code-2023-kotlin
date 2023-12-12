@@ -2,7 +2,7 @@ import kotlin.math.pow
 
 fun main() {
     fun String.extractNumbers(): List<Int> =
-        trim().split("\\s+".toRegex()).map { it.toInt() }
+            trim().split("\\s+".toRegex()).map { it.toInt() }
 
     fun part1(input: List<String>): Int {
         return input.fold(0) { sum, line ->
