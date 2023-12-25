@@ -8,11 +8,8 @@ fun main() {
         almanach.seeds.forEach { seed ->
             var currentSource = seed
             almanach.mapsInOrder.forEach { mappings ->
-                // Find destination for source
-                // Set found destination as currentSource
                 currentSource = mappings.findDestinationForSource(currentSource)
             }
-            // Set currentSource as lowestLocation if it's lower than lowestLocation
             if (currentSource < lowestLocation) {
                 lowestLocation = currentSource
             }
@@ -20,15 +17,32 @@ fun main() {
         return lowestLocation
     }
 
-    fun part2(input: List<String>): Int {
-        var sum = 0
-        return sum
+    fun part2(input: List<String>): Long {
+        val almanach = input.readAlmanach()
+
+        var lowestLocation: Long = Long.MAX_VALUE
+
+        almanach
+                .createSeedRanges()
+                .forEach { seedRange ->
+                    seedRange.forEach { seed ->
+                        var currentSource = seed
+                        almanach.mapsInOrder.forEach { mappings ->
+                            currentSource = mappings.findDestinationForSource(currentSource)
+                        }
+                        if (currentSource < lowestLocation) {
+                            lowestLocation = currentSource
+                        }
+                    }
+                }
+
+        return lowestLocation
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day05_test")
     check(part1(testInput) == 35L)
-    check(part2(testInput) == 0)
+    check(part2(testInput) == 46L)
 
     val input = readInput("Day05")
     part1(input).println()
@@ -82,21 +96,32 @@ private fun List<String>.readAlmanach(): Almanach {
     )
 }
 
+fun Almanach.createSeedRanges(): List<LongRange> =
+        buildList {
+            var seedStart = 0L
+            seeds.forEachIndexed { index, value ->
+                if (index % 2 == 0) {
+                    seedStart = value
+                } else {
+                    add(seedStart until (seedStart + value))
+                }
+            }
+        }
+
 private fun List<MappingEntry>.findDestinationForSource(currentSource: Long): Long {
     var destination: Long? = null
     forEach { mappingEntry ->
         val (destinationStart, sourceStart, length) = mappingEntry
-        if (currentSource >= sourceStart && currentSource <= sourceStart + length) {
-            destination = destinationStart + abs(currentSource-sourceStart)
+        if (currentSource >= sourceStart && currentSource <= sourceStart + (length - 1)) {
+            destination = destinationStart + abs(currentSource - sourceStart)
         }
     }
 
     return destination ?: currentSource
 }
 
-private fun List<String>.readSeeds(): List<Long> {
-    return this[0].split(": ")[1].splitToNumbers()
-}
+private fun List<String>.readSeeds(): List<Long> =
+        this[0].split(": ")[1].splitToNumbers()
 
-fun String.splitToNumbers() =
+private fun String.splitToNumbers() =
         split(" ").map { it.toLong() }
